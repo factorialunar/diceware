@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ca">
+    <head>
+        <meta charset="utf-8">
+        <title>Diceware</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    </head>
+    <body>
+        <div class="container">
+            <div class="row mt-5">
+                <div class="col">
+                    <h1 class="text-center">Diceware</h1>
+                    <p class="text-center">Generador de frases de contrasenya</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col"></div>
+                <div class="col-8">
+                    <div id="passphrase" class="border rounded text-center font-monospace">Generant...</div>
+                </div>
+                <div class="col"></div>
+            </div>
+            <div class="row mt-3">
+                <div class="col"></div>
+                <div class="col-2">
+                    <label id="word-count-label" for="word-count">Paraules: 6</label>
+                </div>
+                <div class="col-6">
+                    <input type="range" class="form-range" min="4" max="10" value="6" id="word-count" disabled>
+                </div>
+                <div class="col"></div>
+            </div>
+            <div class="row">
+                <div class="col"></div>
+                <div class="col-8">
+                    <div class="mt-2 text-center">
+                        <button id="generate" type="button" class="btn btn-primary" disabled>Genera una nova frase de contrasenya</button>
+                    </div>
+                </div>
+                <div class="col"></div>
+            </div>
+        </div>
+        
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
+
+        <script>
+            var diceware_list = null;
+
+            function generateRandomIndex(dice_count) {
+                const DiceFaces = 6;
+                const random_data = window.crypto.getRandomValues(new Uint8Array(dice_count));
+                const rolls = random_data.map((random_number) => (random_number / 0xff) * (DiceFaces - 1) + 1);
+                return Array.from(rolls).join("");
+            }
+
+            function getWordCount() {
+                return parseInt(document.getElementById("word-count").value);
+            }
+
+            function generatePassphrase() {
+                const dice_count = Object.keys(diceware_list)[0].toString().length;
+                const word_count = getWordCount();
+
+                const words = Array.from(Array(word_count).keys(), () => {
+                    const index = generateRandomIndex(dice_count);
+                    return diceware_list[index];
+                });
+
+                document.getElementById("passphrase").innerText = words.join(" ");
+            }
+
+            window.addEventListener("load", (event) => {
+                document.getElementById("generate").addEventListener("click", (event) => {
+                    generatePassphrase();
+                });
+
+                document.getElementById("word-count").addEventListener("change", (event) => {
+                    document.getElementById("word-count-label").innerText = "Paraules: " + getWordCount();
+                    generatePassphrase();
+                });
+
+                fetch("ca.json")
+                    .then(async (response) => {
+                        // Success
+                        if (!response.ok) {
+                            document.getElementById("passphrase").setAttribute("value", "Error de xarxa");
+                            return;
+                        }
+                        
+                        diceware_list = await response.json();
+                        generatePassphrase();
+                        document.getElementById("generate").removeAttribute("disabled");
+                        document.getElementById("word-count").removeAttribute("disabled");
+                    },
+                    (reason) => {
+                        // Error
+                        document.getElementById("passphrase").setAttribute("value", "Error de xarxa");
+                    });
+            });
+        </script>
+    </body>
+</html>
