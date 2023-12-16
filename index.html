@@ -9,35 +9,38 @@
     </head>
     <body>
         <div class="container">
-            <div class="row mt-5">
-                <div class="col">
-                    <h1 class="text-center">Diceware</h1>
-                    <p class="text-center">Generador de frases de contrasenya</p>
-                </div>
-            </div>
             <div class="row">
                 <div class="col"></div>
-                <div class="col-8">
-                    <div id="passphrase" class="border rounded text-center font-monospace">Generant...</div>
-                </div>
-                <div class="col"></div>
-            </div>
-            <div class="row mt-3">
-                <div class="col"></div>
-                <div class="col-2">
-                    <label id="word-count-label" for="word-count">Paraules: 6</label>
-                </div>
-                <div class="col-6">
-                    <input type="range" class="form-range" min="4" max="10" value="6" id="word-count" disabled>
-                </div>
-                <div class="col"></div>
-            </div>
-            <div class="row">
-                <div class="col"></div>
-                <div class="col-8">
-                    <div class="mt-2 text-center">
-                        <button id="generate" type="button" class="btn btn-primary" disabled>Genera una nova frase de contrasenya</button>
+                <div class="col-sm-8">
+
+                    <div class="row mt-5">
+                        <div class="col">
+                            <h1 class="text-center">Diceware</h1>
+                            <p class="text-center">Generador de frases de contrasenya</p>
+                        </div>
                     </div>
+                    <div class="row">
+                        <div class="col">
+                            <div id="passphrase" class="border rounded text-center font-monospace">Generant...</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col">
+                            <label id="word-count-label" for="word-count">Paraules: 6</label>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="range" class="form-range" min="4" max="10" value="6" id="word-count" disabled>
+                        </div>
+                        <div class="col">Entropia: <span id="entropy"></span></div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="mt-2 text-center">
+                                <button id="generate" type="button" class="btn btn-primary" disabled>Genera una nova frase de contrasenya</button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 <div class="col"></div>
             </div>
@@ -47,9 +50,9 @@
 
         <script>
             var diceware_list = null;
+            const DiceFaces = 6;
 
             function generateRandomIndex(dice_count) {
-                const DiceFaces = 6;
                 const random_data = window.crypto.getRandomValues(new Uint8Array(dice_count));
                 const rolls = random_data.map((random_number) => (random_number / 0xff) * (DiceFaces - 1) + 1);
                 return Array.from(rolls).join("");
@@ -62,6 +65,7 @@
             function generatePassphrase() {
                 const dice_count = Object.keys(diceware_list)[0].toString().length;
                 const word_count = getWordCount();
+                const entropy = Math.floor(Math.log2((DiceFaces ** dice_count)) * word_count);
 
                 const words = Array.from(Array(word_count).keys(), () => {
                     const index = generateRandomIndex(dice_count);
@@ -69,6 +73,7 @@
                 });
 
                 document.getElementById("passphrase").innerText = words.join(" ");
+                document.getElementById("entropy").innerText = entropy + " bits";
             }
 
             window.addEventListener("load", (event) => {
